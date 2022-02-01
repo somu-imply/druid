@@ -123,6 +123,7 @@ public class SqlExpressionBenchmark
       // non-expression reference queries
       // ===========================
       // 0: non-expression timeseries reference, 1 columns
+      /*
       "SELECT SUM(long1) FROM foo",
       // 1: non-expression timeseries reference, 2 columns
       "SELECT SUM(long1), SUM(long2) FROM foo",
@@ -188,7 +189,23 @@ public class SqlExpressionBenchmark
       // 30: logical and operator
       "SELECT CAST(long1 as BOOLEAN) AND CAST (long2 as BOOLEAN), COUNT(*) FROM foo GROUP BY 1 ORDER BY 2",
       // 31: isnull, notnull
-      "SELECT long5 IS NULL, long3 IS NOT NULL, count(*) FROM foo GROUP BY 1,2 ORDER BY 3"
+      "SELECT long5 IS NULL, long3 IS NOT NULL, count(*) FROM foo GROUP BY 1,2 ORDER BY 3",*/
+      // 32: time shift, non-expr col + reg agg
+      "SELECT TIME_SHIFT(__time, 'PT1H', 3), string2, SUM(double4) FROM foo GROUP BY 1,2 ORDER BY 3",
+      // 33: time floor, non-expr col + expr agg
+      "SELECT TIME_SHIFT(__time, 'PT1H', 3), string2, SUM(long1 * double4) FROM foo GROUP BY 1,2 ORDER BY 3",
+      // 34: time floor + non-expr agg (timeseries) (non-expression reference)
+      "SELECT TIME_SHIFT(__time, 'PT1H', 3), SUM(long1) FROM foo GROUP BY 1 ORDER BY 1",
+      // 35: time floor + expr agg (timeseries)
+      "SELECT TIME_SHIFT(__time, 'PT1H', 4), SUM(long1 * long4) FROM foo GROUP BY 1 ORDER BY 1",
+      // 36: time floor + non-expr agg (group by)
+      "SELECT TIME_SHIFT(__time, 'PT1H', 3), SUM(long1) FROM foo GROUP BY 1 ORDER BY 2",
+      // 37: time floor + expr agg (group by)
+      "SELECT TIME_SHIFT(__time, 'PT1H', 5), SUM(long1 * long4) FROM foo GROUP BY 1 ORDER BY 2",
+      // 38: time floor offset by 1 day + non-expr agg (group by)
+      "SELECT TIME_SHIFT(TIMESTAMPADD(DAY, -1, __time), 'PT1H', 3), SUM(long1) FROM foo GROUP BY 1 ORDER BY 1",
+      // 39: time floor offset by 1 day + expr agg (group by)
+      "SELECT TIME_SHIFT(TIMESTAMPADD(DAY, -1, __time), 'PT1H', 4), SUM(long1 * long4) FROM foo GROUP BY 1 ORDER BY 1"
   );
 
   @Param({"5000000"})
