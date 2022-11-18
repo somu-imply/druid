@@ -27,6 +27,7 @@ import org.apache.druid.java.util.common.ISE;
 import org.apache.druid.java.util.common.concurrent.Execs;
 import org.apache.druid.java.util.common.guava.FunctionalIterable;
 import org.apache.druid.java.util.common.guava.LazySequence;
+import org.apache.druid.query.DataSource;
 import org.apache.druid.query.FinalizeResultsQueryRunner;
 import org.apache.druid.query.NoopQueryRunner;
 import org.apache.druid.query.Queries;
@@ -96,7 +97,8 @@ public class TestClusterQuerySegmentWalker implements QuerySegmentWalker
     // Strange, but true. Required to get authentic behavior with UnionDataSources. (Although, it would be great if
     // this wasn't required.)
     return (queryPlus, responseContext) -> {
-      final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(queryPlus.getQuery().getDataSource());
+      final DataSource queryDataSource = queryPlus.getQuery().getDataSource();
+      final DataSourceAnalysis analysis = queryDataSource.getAnalysisForDataSource(queryDataSource, query);
 
       if (!analysis.isConcreteTableBased()) {
         throw new ISE("Cannot handle datasource: %s", queryPlus.getQuery().getDataSource());
@@ -120,8 +122,8 @@ public class TestClusterQuerySegmentWalker implements QuerySegmentWalker
     if (factory == null) {
       throw new ISE("Unknown query type[%s].", query.getClass());
     }
-
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(query.getDataSource());
+    final DataSource queryDataSource = query.getDataSource();
+    final DataSourceAnalysis analysis = queryDataSource.getAnalysisForDataSource(queryDataSource, query);
 
     if (!analysis.isConcreteTableBased()) {
       throw new ISE("Cannot handle datasource: %s", query.getDataSource());

@@ -24,6 +24,7 @@ import org.apache.druid.java.util.common.IAE;
 import org.apache.druid.java.util.common.ISE;
 import org.apache.druid.java.util.common.guava.FunctionalIterable;
 import org.apache.druid.java.util.emitter.service.ServiceEmitter;
+import org.apache.druid.query.DataSource;
 import org.apache.druid.query.DirectQueryProcessingPool;
 import org.apache.druid.query.FluentQueryRunnerBuilder;
 import org.apache.druid.query.Query;
@@ -79,7 +80,8 @@ public class LocalQuerySegmentWalker implements QuerySegmentWalker
   @Override
   public <T> QueryRunner<T> getQueryRunnerForIntervals(final Query<T> query, final Iterable<Interval> intervals)
   {
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(query.getDataSource());
+    final DataSource queryDataSource = query.getDataSource();
+    final DataSourceAnalysis analysis = queryDataSource.getAnalysisForDataSource(queryDataSource, query);
 
     if (!analysis.isConcreteBased() || !analysis.isGlobal()) {
       throw new IAE("Cannot query dataSource locally: %s", analysis.getDataSource());

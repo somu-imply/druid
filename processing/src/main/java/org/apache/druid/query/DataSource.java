@@ -124,4 +124,12 @@ public interface DataSource
    */
   byte[] getCacheKey();
 
+  /**
+   * Fetches the analysis for a data source
+   * @param topLevelDataSource the top level datasource for which the analysis needs to be created
+   * @param baseQuery the base query needed to create a datasource. This is used in {@link JoinDataSource} and {@link QueryDataSource}
+   * @return the analysis for the data source
+   */
+  DataSourceAnalysis getAnalysisForDataSource(DataSource topLevelDataSource, Query<?> baseQuery);
+
 }

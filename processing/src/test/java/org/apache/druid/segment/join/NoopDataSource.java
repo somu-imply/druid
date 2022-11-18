@@ -21,8 +21,10 @@ package org.apache.druid.segment.join;
 
 import org.apache.druid.query.DataSource;
 import org.apache.druid.query.Query;
+import org.apache.druid.query.planning.DataSourceAnalysis;
 import org.apache.druid.segment.SegmentReference;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -88,5 +90,14 @@ public class NoopDataSource implements DataSource
   public byte[] getCacheKey()
   {
     return new byte[]{};
+  }
+
+  @Override
+  public DataSourceAnalysis getAnalysisForDataSource(
+      DataSource topLevelDataSource,
+      Query<?> baseQuery
+  )
+  {
+    return new DataSourceAnalysis(topLevelDataSource, this, baseQuery, null, Collections.emptyList());
   }
 }

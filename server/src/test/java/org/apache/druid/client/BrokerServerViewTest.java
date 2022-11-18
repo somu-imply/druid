@@ -40,7 +40,6 @@ import org.apache.druid.java.util.http.client.HttpClient;
 import org.apache.druid.query.QueryToolChestWarehouse;
 import org.apache.druid.query.QueryWatcher;
 import org.apache.druid.query.TableDataSource;
-import org.apache.druid.query.planning.DataSourceAnalysis;
 import org.apache.druid.segment.TestHelper;
 import org.apache.druid.server.coordination.DruidServerMetadata;
 import org.apache.druid.server.coordination.ServerType;
@@ -109,8 +108,9 @@ public class BrokerServerViewTest extends CuratorTestBase
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentViewInitLatch));
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentAddedLatch));
 
+    final TableDataSource tableDataSource = new TableDataSource("test_broker_server_view");
     TimelineLookup<String, ServerSelector> timeline = brokerServerView.getTimeline(
-        DataSourceAnalysis.forDataSource(new TableDataSource("test_broker_server_view"))
+        tableDataSource.getAnalysisForDataSource(tableDataSource, null)
     ).get();
     List<TimelineObjectHolder<String, ServerSelector>> serverLookupRes = timeline.lookup(intervals);
     Assert.assertEquals(1, serverLookupRes.size());
@@ -171,8 +171,9 @@ public class BrokerServerViewTest extends CuratorTestBase
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentViewInitLatch));
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentAddedLatch));
 
+    TableDataSource tableDataSource = new TableDataSource("test_broker_server_view");
     TimelineLookup timeline = brokerServerView.getTimeline(
-        DataSourceAnalysis.forDataSource(new TableDataSource("test_broker_server_view"))
+        tableDataSource.getAnalysisForDataSource(tableDataSource, null)
     ).get();
     assertValues(
         Arrays.asList(
@@ -194,8 +195,9 @@ public class BrokerServerViewTest extends CuratorTestBase
     // renew segmentRemovedLatch since we still have 4 segments to unannounce
     segmentRemovedLatch = new CountDownLatch(4);
 
+    tableDataSource = new TableDataSource("test_broker_server_view");
     timeline = brokerServerView.getTimeline(
-        DataSourceAnalysis.forDataSource(new TableDataSource("test_broker_server_view"))
+        tableDataSource.getAnalysisForDataSource(tableDataSource, null)
     ).get();
     assertValues(
         Arrays.asList(
@@ -273,8 +275,9 @@ public class BrokerServerViewTest extends CuratorTestBase
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentViewInitLatch));
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentAddedLatch));
 
+    TableDataSource tableDataSource = new TableDataSource("test_broker_server_view");
     TimelineLookup timeline = brokerServerView.getTimeline(
-        DataSourceAnalysis.forDataSource(new TableDataSource("test_broker_server_view"))
+        tableDataSource.getAnalysisForDataSource(tableDataSource, null)
     ).get();
 
     assertValues(
@@ -297,8 +300,9 @@ public class BrokerServerViewTest extends CuratorTestBase
     // renew segmentRemovedLatch since we still have 5 segments to unannounce
     segmentRemovedLatch = new CountDownLatch(5);
 
+    tableDataSource = new TableDataSource("test_broker_server_view");
     timeline = brokerServerView.getTimeline(
-        DataSourceAnalysis.forDataSource(new TableDataSource("test_broker_server_view"))
+        tableDataSource.getAnalysisForDataSource(tableDataSource, null)
     ).get();
 
     // expect same set of segments as before
@@ -353,8 +357,9 @@ public class BrokerServerViewTest extends CuratorTestBase
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentAddedLatch));
 
     // Get the timeline for the datasource
+    TableDataSource tableDataSource = new TableDataSource(segment1.getDataSource());
     TimelineLookup<String, ServerSelector> timeline = brokerServerView.getTimeline(
-        DataSourceAnalysis.forDataSource(new TableDataSource(segment1.getDataSource()))
+        tableDataSource.getAnalysisForDataSource(tableDataSource, null)
     ).get();
 
     // Verify that the timeline has no entry for the interval of segment 1
@@ -413,8 +418,9 @@ public class BrokerServerViewTest extends CuratorTestBase
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentAddedLatch));
 
     // Get the timeline for the datasource
+    TableDataSource tableDataSource = new TableDataSource(segment1.getDataSource());
     TimelineLookup<String, ServerSelector> timeline = brokerServerView.getTimeline(
-        DataSourceAnalysis.forDataSource(new TableDataSource(segment1.getDataSource()))
+        tableDataSource.getAnalysisForDataSource(tableDataSource, null)
     ).get();
 
     // Verify that the timeline has no entry for the interval of segment 1
@@ -475,8 +481,9 @@ public class BrokerServerViewTest extends CuratorTestBase
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentAddedLatch));
 
     // Get the timeline for the datasource
+    TableDataSource tableDataSource = new TableDataSource(segment1.getDataSource());
     TimelineLookup<String, ServerSelector> timeline = brokerServerView.getTimeline(
-        DataSourceAnalysis.forDataSource(new TableDataSource(segment1.getDataSource()))
+        tableDataSource.getAnalysisForDataSource(tableDataSource, null)
     ).get();
 
     // Verify that the timeline has no entry for the interval of segment 1

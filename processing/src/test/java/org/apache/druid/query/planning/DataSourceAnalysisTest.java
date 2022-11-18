@@ -62,7 +62,7 @@ public class DataSourceAnalysisTest
   @Test
   public void testTable()
   {
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(TABLE_FOO);
+    final DataSourceAnalysis analysis = TABLE_FOO.getAnalysisForDataSource(TABLE_FOO, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -82,7 +82,7 @@ public class DataSourceAnalysisTest
   public void testUnion()
   {
     final UnionDataSource unionDataSource = new UnionDataSource(ImmutableList.of(TABLE_FOO, TABLE_BAR));
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(unionDataSource);
+    final DataSourceAnalysis analysis = unionDataSource.getAnalysisForDataSource(unionDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -102,7 +102,7 @@ public class DataSourceAnalysisTest
   public void testQueryOnTable()
   {
     final QueryDataSource queryDataSource = subquery(TABLE_FOO);
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(queryDataSource);
+    final DataSourceAnalysis analysis = queryDataSource.getAnalysisForDataSource(queryDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -126,7 +126,7 @@ public class DataSourceAnalysisTest
   {
     final UnionDataSource unionDataSource = new UnionDataSource(ImmutableList.of(TABLE_FOO, TABLE_BAR));
     final QueryDataSource queryDataSource = subquery(unionDataSource);
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(queryDataSource);
+    final DataSourceAnalysis analysis = queryDataSource.getAnalysisForDataSource(queryDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -148,7 +148,7 @@ public class DataSourceAnalysisTest
   @Test
   public void testLookup()
   {
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(LOOKUP_LOOKYLOO);
+    final DataSourceAnalysis analysis = LOOKUP_LOOKYLOO.getAnalysisForDataSource(LOOKUP_LOOKYLOO, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertFalse(analysis.isConcreteTableBased());
@@ -168,7 +168,7 @@ public class DataSourceAnalysisTest
   public void testQueryOnLookup()
   {
     final QueryDataSource queryDataSource = subquery(LOOKUP_LOOKYLOO);
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(queryDataSource);
+    final DataSourceAnalysis analysis = queryDataSource.getAnalysisForDataSource(queryDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertFalse(analysis.isConcreteTableBased());
@@ -190,7 +190,7 @@ public class DataSourceAnalysisTest
   @Test
   public void testInline()
   {
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(INLINE);
+    final DataSourceAnalysis analysis = INLINE.getAnalysisForDataSource(INLINE, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertFalse(analysis.isConcreteTableBased());
@@ -230,7 +230,7 @@ public class DataSourceAnalysisTest
             JoinType.FULL
         );
 
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(joinDataSource);
+    final DataSourceAnalysis analysis = joinDataSource.getAnalysisForDataSource(joinDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -277,7 +277,7 @@ public class DataSourceAnalysisTest
             JoinType.FULL
         );
 
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(joinDataSource);
+    final DataSourceAnalysis analysis = joinDataSource.getAnalysisForDataSource(joinDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -331,7 +331,7 @@ public class DataSourceAnalysisTest
             JoinType.RIGHT
         );
 
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(joinDataSource);
+    final DataSourceAnalysis analysis = joinDataSource.getAnalysisForDataSource(joinDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -378,7 +378,7 @@ public class DataSourceAnalysisTest
             TrueDimFilter.instance()
         );
 
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(joinDataSource);
+    final DataSourceAnalysis analysis = joinDataSource.getAnalysisForDataSource(joinDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -411,7 +411,7 @@ public class DataSourceAnalysisTest
         TrueDimFilter.instance()
     );
 
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(joinDataSource);
+    final DataSourceAnalysis analysis = joinDataSource.getAnalysisForDataSource(joinDataSource, null);
 
     Assert.assertFalse(analysis.isConcreteBased());
     Assert.assertFalse(analysis.isConcreteTableBased());
@@ -442,7 +442,7 @@ public class DataSourceAnalysisTest
         JoinType.INNER
     );
 
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(joinDataSource);
+    final DataSourceAnalysis analysis = joinDataSource.getAnalysisForDataSource(joinDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -480,7 +480,7 @@ public class DataSourceAnalysisTest
             )
         );
 
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(queryDataSource);
+    final DataSourceAnalysis analysis = queryDataSource.getAnalysisForDataSource(queryDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertTrue(analysis.isConcreteTableBased());
@@ -528,7 +528,7 @@ public class DataSourceAnalysisTest
         JoinType.INNER
     );
 
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(joinDataSource);
+    final DataSourceAnalysis analysis = joinDataSource.getAnalysisForDataSource(joinDataSource, null);
 
     Assert.assertTrue(analysis.isConcreteBased());
     Assert.assertFalse(analysis.isConcreteTableBased());
@@ -560,7 +560,7 @@ public class DataSourceAnalysisTest
         JoinType.INNER
     );
 
-    final DataSourceAnalysis analysis = DataSourceAnalysis.forDataSource(joinDataSource);
+    final DataSourceAnalysis analysis = joinDataSource.getAnalysisForDataSource(joinDataSource, null);
 
     Assert.assertFalse(analysis.isConcreteBased());
     Assert.assertFalse(analysis.isConcreteTableBased());

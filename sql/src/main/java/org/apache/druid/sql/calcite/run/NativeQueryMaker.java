@@ -39,6 +39,7 @@ import org.apache.druid.java.util.common.UOE;
 import org.apache.druid.java.util.common.guava.Sequence;
 import org.apache.druid.java.util.common.guava.Sequences;
 import org.apache.druid.math.expr.Evals;
+import org.apache.druid.query.DataSource;
 import org.apache.druid.query.InlineDataSource;
 import org.apache.druid.query.Query;
 import org.apache.druid.query.QueryToolChest;
@@ -167,10 +168,12 @@ public class NativeQueryMaker implements QueryMaker
 
   private List<Interval> findBaseDataSourceIntervals(Query<?> query)
   {
-    return DataSourceAnalysis.forDataSource(query.getDataSource())
-                             .getBaseQuerySegmentSpec()
-                             .map(QuerySegmentSpec::getIntervals)
-                             .orElseGet(query::getIntervals);
+    final DataSource queryDataSource = query.getDataSource();
+    final DataSourceAnalysis analysis = queryDataSource.getAnalysisForDataSource(queryDataSource, query);
+    return analysis
+        .getBaseQuerySegmentSpec()
+        .map(QuerySegmentSpec::getIntervals)
+        .orElseGet(query::getIntervals);
   }
 
   @SuppressWarnings("unchecked")
