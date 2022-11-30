@@ -3401,6 +3401,18 @@ public class CalciteQueryTest extends BaseCalciteQueryTest
   }
 
   @Test
+  public void testUnnest()
+  {
+    testQuery(
+        "SELECT * FROM UNNEST(ARRAY['1','2','3'])",
+        ImmutableList.of(),
+        ImmutableList.of(
+            new Object[]{"dim1_firstchar", "VARCHAR", "YES"}
+        )
+    );
+  }
+
+  @Test
   public void testNullLongFilter()
   {
     testQuery(
