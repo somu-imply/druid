@@ -3404,7 +3404,8 @@ public class CalciteQueryTest extends BaseCalciteQueryTest
   public void testUnnest()
   {
     testQuery(
-        "SELECT * FROM UNNEST(ARRAY['1','2','3'])",
+        "SELECT * FROM druid.numfoo, UNNEST(MV_TO_ARRAY(dim3))",
+        //"SELECT * FROM UNNEST(ARRAY['1','2','3'])",
         ImmutableList.of(),
         ImmutableList.of(
             new Object[]{"dim1_firstchar", "VARCHAR", "YES"}

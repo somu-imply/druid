@@ -53,7 +53,7 @@ public class InlineDataSource implements DataSource
   private final Iterable<Object[]> rows;
   private final RowSignature signature;
 
-  private InlineDataSource(
+  public InlineDataSource(
       final Iterable<Object[]> rows,
       final RowSignature signature
   )
