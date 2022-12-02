@@ -19,55 +19,53 @@
 
 package org.apache.druid.sql.calcite.rel;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.core.Uncollect;
-import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rel.logical.LogicalValues;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexFieldAccess;
-import org.apache.druid.query.DataSource;
-import org.apache.druid.query.InlineDataSource;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.logical.LogicalCorrelate;
 import org.apache.druid.query.JoinDataSource;
+import org.apache.druid.query.TableDataSource;
 import org.apache.druid.query.UnnestDataSource;
-import org.apache.druid.segment.column.RowSignature;
 import org.apache.druid.sql.calcite.planner.PlannerConfig;
 import org.apache.druid.sql.calcite.planner.PlannerContext;
+import org.apache.druid.sql.calcite.table.DruidTable;
 import org.apache.druid.sql.calcite.table.RowSignatures;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * DruidRel that uses a {@link org.apache.druid.query.UnnestDataSource}.
+ * DruidRel that uses a {@link JoinDataSource}.
  */
 public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
 {
-
+  private static final TableDataSource DUMMY_DATA_SOURCE = new TableDataSource("__unnest__");
   private final PartialDruidQuery partialQuery;
-  private final Uncollect uncollectRel;
   private final PlannerConfig plannerConfig;
-  private LogicalProject logicalProject;
-  private LogicalValues logicalValues;
-  private final DataSource baseDataSource;
+  private final LogicalCorrelate logicalCorrelate;
+  private final DruidTable druidTable;
+  private final String dimensionToUnnest;
 
   public DruidUnnestRel(
       RelOptCluster cluster,
       RelTraitSet traitSet,
-      Uncollect uncollectRel,
-      LogicalProject logicalProject,
-      LogicalValues logicalValues,
+      LogicalCorrelate logicalCorrelateRel,
       PartialDruidQuery partialQuery,
-      DataSource baseDataSource,
+      DruidTable druidTable,
+      String dimensionToUnnest,
       PlannerContext plannerContext
-  ) {
+  )
+  {
     super(cluster, traitSet, plannerContext);
-    this.uncollectRel = uncollectRel;
+    this.logicalCorrelate = logicalCorrelateRel;
     this.partialQuery = partialQuery;
-    this.logicalProject = logicalProject;
-    this.logicalValues = logicalValues;
     this.plannerConfig = plannerContext.getPlannerConfig();
-    this.baseDataSource = baseDataSource;
+    this.druidTable = druidTable;
+    this.dimensionToUnnest = dimensionToUnnest;
   }
 
   @Nullable
@@ -83,68 +81,74 @@ public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
     return new DruidUnnestRel(
         getCluster(),
         getTraitSet().plusAll(newQueryBuilder.getRelTraits()),
-        uncollectRel,
-        logicalProject,
-        logicalValues,
+        logicalCorrelate,
         newQueryBuilder,
-        baseDataSource,
+        druidTable,
+        dimensionToUnnest,
         getPlannerContext()
-        );
+    );
   }
 
   @Override
   public DruidQuery toDruidQuery(boolean finalizeAggregations)
   {
-    RowSignature rs = RowSignatures.fromRelDataType(logicalProject.getRowType().getFieldNames(),logicalProject.getRowType());
-    RexCall rx = (RexCall) logicalProject.getChildExps().get(0);
-    RexFieldAccess rf = (RexFieldAccess)rx.getOperands().get(0);
-    String dimensionToUnnest = rf.getField().getName();
+    final UnnestDataSource unnestDataSource =
+        UnnestDataSource.create(
+            druidTable.getDataSource(),
+            dimensionToUnnest,
+            dimensionToUnnest,
+            null
+        );
 
-    
-    /*
-    When this is called only from Uncollect, this should create an InlineDataSource
-    and pass it as the base of an UnnestDataSource with a dummy input
-
-
-
-
-    InlineDataSource id = InlineDataSource.fromIterable(
-        logicalProject.getChildExps(),
-        RowSignatures.fromRelDataType(
-          logicalProject.getRowType().getFieldNames(),
-          logicalProject.getRowType()
-    ));
-
-    UnnestDataSource unnestDataSource = UnnestDataSource.create(id, "dummy", "dummy", null);
 
     return partialQuery.build(
         unnestDataSource,
-        RowSignatures.fromRelDataType(
-            logicalProject.getRowType().getFieldNames(),
-            logicalProject.getRowType()
-        ),
+        druidTable.getRowSignature(),
         getPlannerContext(),
         getCluster().getRexBuilder(),
         finalizeAggregations
-    );*/
-    return null;
+    );
   }
 
   @Override
   public DruidQuery toDruidQueryForExplaining()
   {
-    return null;
+    return partialQuery.build(
+        DUMMY_DATA_SOURCE,
+        RowSignatures.fromRelDataType(
+            logicalCorrelate.getRowType().getFieldNames(),
+            logicalCorrelate.getRowType()
+        ),
+        getPlannerContext(),
+        getCluster().getRexBuilder(),
+        false
+    );
   }
 
   @Override
   public DruidUnnestRel asDruidConvention()
   {
-    return null;
+    return new DruidUnnestRel(
+        getCluster(),
+        getTraitSet().replace(DruidConvention.instance()),
+        (LogicalCorrelate) logicalCorrelate.copy(
+            logicalCorrelate.getTraitSet(),
+            logicalCorrelate.getInputs()
+                   .stream()
+                   .map(input -> RelOptRule.convert(input, DruidConvention.instance()))
+                   .collect(Collectors.toList())
+        ),
+        partialQuery,
+        druidTable,
+        dimensionToUnnest,
+        getPlannerContext()
+    );
   }
+
 
   @Override
   public Set<String> getDataSourceNames()
   {
-    return null;
+    return druidTable.getDataSource().getTableNames();
   }
 }
