@@ -25,6 +25,7 @@ import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalCorrelate;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.druid.query.JoinDataSource;
 import org.apache.druid.query.TableDataSource;
 import org.apache.druid.query.UnnestDataSource;
@@ -96,6 +97,7 @@ public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
         UnnestDataSource.create(
             druidTable.getDataSource(),
             dimensionToUnnest,
+            //this would come from the as alias
             dimensionToUnnest,
             null
         );
@@ -103,11 +105,20 @@ public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
 
     return partialQuery.build(
         unnestDataSource,
-        druidTable.getRowSignature(),
+        RowSignatures.fromRelDataType(
+            logicalCorrelate.getRowType().getFieldNames(),
+            logicalCorrelate.getRowType()
+        ),
         getPlannerContext(),
         getCluster().getRexBuilder(),
         finalizeAggregations
     );
+  }
+
+  @Override
+  protected RelDataType deriveRowType()
+  {
+    return partialQuery.getRowType();
   }
 
   @Override
