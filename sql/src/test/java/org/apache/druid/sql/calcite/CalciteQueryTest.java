@@ -3450,7 +3450,11 @@ public class CalciteQueryTest extends BaseCalciteQueryTest
         "SELECT dim3 FROM druid.numfoo, UNNEST(MV_TO_ARRAY(dim3)), UNNEST(MV_TO_ARRAY(dim2))",
         ImmutableList.of(
             Druids.newScanQueryBuilder()
-                  .dataSource(UnnestDataSource.create(new TableDataSource(CalciteTests.DATASOURCE3), "dim3", "dim3", null))
+                  .dataSource(UnnestDataSource.create(
+                      UnnestDataSource.create(new TableDataSource(CalciteTests.DATASOURCE3),"dim3","dim3",null),
+                      "dim2",
+                      "dim2",
+                      null))
                   .intervals(querySegmentSpec(Filtration.eternity()))
                   .resultFormat(ResultFormat.RESULT_FORMAT_COMPACTED_LIST)
                   .legacy(false)

@@ -294,16 +294,24 @@ public class DimensionUnnestCursor implements Cursor
    */
   private void advanceAndUpdate()
   {
-    if (index >= indexedIntsForCurrentRow.size() - 1) {
+    if (indexedIntsForCurrentRow == null) {
       if (!baseCursor.isDone()) {
+        index = 0;
         baseCursor.advanceUninterruptibly();
       }
-      if (!baseCursor.isDone()) {
-        indexedIntsForCurrentRow = dimSelector.getRow();
+    }
+    else {
+      if (index >= indexedIntsForCurrentRow.size() - 1) {
+        if (!baseCursor.isDone()) {
+          baseCursor.advanceUninterruptibly();
+        }
+        if (!baseCursor.isDone()) {
+          indexedIntsForCurrentRow = dimSelector.getRow();
+        }
+        index = 0;
+      } else {
+        ++index;
       }
-      index = 0;
-    } else {
-      ++index;
     }
   }
 

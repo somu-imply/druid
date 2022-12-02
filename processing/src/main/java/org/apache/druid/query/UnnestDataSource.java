@@ -186,9 +186,10 @@ public class UnnestDataSource implements DataSource
   public String toString()
   {
     return "UnnestDataSource{" +
-           "base=" + base.getTableNames() +
+           "base=" + base.toString() +
            ", columnName=" + column +
            ", outputName=" + outputName +
+           ", allowList=" + allowList +
            '}';
   }
 
