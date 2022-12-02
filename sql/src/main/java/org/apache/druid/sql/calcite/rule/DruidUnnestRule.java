@@ -28,6 +28,7 @@ import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.tools.RelBuilder;
+import org.apache.druid.query.DataSource;
 import org.apache.druid.sql.calcite.planner.PlannerContext;
 import org.apache.druid.sql.calcite.rel.DruidQueryRel;
 import org.apache.druid.sql.calcite.rel.DruidRel;
@@ -74,7 +75,8 @@ public class DruidUnnestRule extends RelOptRule
     RexFieldAccess rf = (RexFieldAccess) rx.getOperands().get(0);
     String dimensionToUnnest = rf.getField().getName();
 
-    DruidTable druidTable = ((DruidQueryRel) druidRel).getDruidTable();
+    DataSource base = druidRel.getDataSourceFromRel();
+
 
     //create an UnnestRel here and transform using that rel
     DruidUnnestRel druidUnnestRel = new DruidUnnestRel(
@@ -82,7 +84,7 @@ public class DruidUnnestRule extends RelOptRule
         logicalCorrelate.getTraitSet(),
         logicalCorrelate,
         PartialDruidQuery.create(logicalCorrelate),
-        druidTable,
+        base,
         dimensionToUnnest,
         plannerContext
     );

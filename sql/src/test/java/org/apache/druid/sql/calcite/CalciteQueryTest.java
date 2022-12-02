@@ -45,6 +45,7 @@ import org.apache.druid.query.QueryDataSource;
 import org.apache.druid.query.ResourceLimitExceededException;
 import org.apache.druid.query.TableDataSource;
 import org.apache.druid.query.UnionDataSource;
+import org.apache.druid.query.UnnestDataSource;
 import org.apache.druid.query.aggregation.AggregatorFactory;
 import org.apache.druid.query.aggregation.CountAggregatorFactory;
 import org.apache.druid.query.aggregation.DoubleMaxAggregatorFactory;
@@ -3403,13 +3404,71 @@ public class CalciteQueryTest extends BaseCalciteQueryTest
   @Test
   public void testUnnest()
   {
+    // This tells the test to skip generating (vectorize = force) path
+    // Generates only 1 native query with vectorize = false
+    skipVectorize();
+    // This tells that both vectorize = force and vectorize = false takes the same path of non vectorization
+    // Generates 2 native queries with 2 different values of vectorize
     cannotVectorize();
     testQuery(
-        "SELECT * FROM druid.numfoo, UNNEST(MV_TO_ARRAY(dim3)) AS \"unnestdim3\"",
-        //"SELECT * FROM UNNEST(ARRAY['1','2','3'])",
-        ImmutableList.of(),
+        "SELECT dim3 FROM druid.numfoo, UNNEST(MV_TO_ARRAY(dim3))",
         ImmutableList.of(
-            new Object[]{"dim1_firstchar", "VARCHAR", "YES"}
+            Druids.newScanQueryBuilder()
+                  .dataSource(UnnestDataSource.create(new TableDataSource(CalciteTests.DATASOURCE3), "dim3", "dim3", null))
+                  .intervals(querySegmentSpec(Filtration.eternity()))
+                  .resultFormat(ResultFormat.RESULT_FORMAT_COMPACTED_LIST)
+                  .legacy(false)
+                  .context(QUERY_CONTEXT_DEFAULT)
+                  .columns(ImmutableList.of(
+                      "dim3"
+                  ))
+                  .build()
+        ),
+        ImmutableList.of(
+            new Object[]{"a"},
+            new Object[]{"b"},
+            new Object[]{"b"},
+            new Object[]{"c"},
+            new Object[]{"d"},
+            new Object[]{""},
+            new Object[]{""},
+            new Object[]{""}
+        )
+    );
+  }
+
+  @Test
+  public void testUnnestOfUnnestTwoDiffColumns()
+  {
+    // This tells the test to skip generating (vectorize = force) path
+    // Generates only 1 native query with vectorize = false
+    skipVectorize();
+    // This tells that both vectorize = force and vectorize = false takes the same path of non vectorization
+    // Generates 2 native queries with 2 different values of vectorize
+    cannotVectorize();
+    testQuery(
+        "SELECT dim3 FROM druid.numfoo, UNNEST(MV_TO_ARRAY(dim3)), UNNEST(MV_TO_ARRAY(dim2))",
+        ImmutableList.of(
+            Druids.newScanQueryBuilder()
+                  .dataSource(UnnestDataSource.create(new TableDataSource(CalciteTests.DATASOURCE3), "dim3", "dim3", null))
+                  .intervals(querySegmentSpec(Filtration.eternity()))
+                  .resultFormat(ResultFormat.RESULT_FORMAT_COMPACTED_LIST)
+                  .legacy(false)
+                  .context(QUERY_CONTEXT_DEFAULT)
+                  .columns(ImmutableList.of(
+                      "dim3"
+                  ))
+                  .build()
+        ),
+        ImmutableList.of(
+            new Object[]{"a"},
+            new Object[]{"b"},
+            new Object[]{"b"},
+            new Object[]{"c"},
+            new Object[]{"d"},
+            new Object[]{""},
+            new Object[]{""},
+            new Object[]{""}
         )
     );
   }

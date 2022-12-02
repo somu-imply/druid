@@ -59,6 +59,7 @@ public class DruidUnionDataSourceRel extends DruidRel<DruidUnionDataSourceRel>
   private final Union unionRel;
   private final List<String> unionColumnNames;
   private final PartialDruidQuery partialQuery;
+  private UnionDataSource unionDataSource;
 
   private DruidUnionDataSourceRel(
       final RelOptCluster cluster,
@@ -161,8 +162,10 @@ public class DruidUnionDataSourceRel extends DruidRel<DruidUnionDataSourceRel>
       throw new CannotBuildQueryException(unionRel);
     }
 
+    this.unionDataSource = new UnionDataSource(dataSources);
+
     return partialQuery.build(
-        new UnionDataSource(dataSources),
+       unionDataSource,
         signature,
         getPlannerContext(),
         getCluster().getRexBuilder(),
@@ -239,6 +242,12 @@ public class DruidUnionDataSourceRel extends DruidRel<DruidUnionDataSourceRel>
     }
 
     return retVal;
+  }
+
+  @Override
+  public DataSource getDataSourceFromRel()
+  {
+    return unionDataSource;
   }
 
   @Override

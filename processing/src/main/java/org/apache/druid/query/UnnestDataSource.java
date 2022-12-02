@@ -183,6 +183,16 @@ public class UnnestDataSource implements DataSource
   }
 
   @Override
+  public String toString()
+  {
+    return "UnnestDataSource{" +
+           "base=" + base.getTableNames() +
+           ", columnName=" + column +
+           ", outputName=" + outputName +
+           '}';
+  }
+
+  @Override
   public int hashCode()
   {
     return Objects.hash(base, column, outputName);

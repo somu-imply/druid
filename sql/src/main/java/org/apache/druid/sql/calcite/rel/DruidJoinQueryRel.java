@@ -76,6 +76,7 @@ public class DruidJoinQueryRel extends DruidRel<DruidJoinQueryRel>
   private final PlannerConfig plannerConfig;
   private RelNode left;
   private RelNode right;
+  private DataSource joinDataSource;
 
   private DruidJoinQueryRel(
       RelOptCluster cluster,
@@ -187,17 +188,19 @@ public class DruidJoinQueryRel extends DruidRel<DruidJoinQueryRel>
       throw new CannotBuildQueryException(joinRel, joinRel.getCondition());
     }
 
+    this.joinDataSource = JoinDataSource.create(
+        leftDataSource,
+        rightDataSource,
+        prefixSignaturePair.lhs,
+        condition.getExpression(),
+        toDruidJoinType(joinRel.getJoinType()),
+        getDimFilter(getPlannerContext(), leftSignature, leftFilter),
+        getPlannerContext().getExprMacroTable(),
+        getPlannerContext().getJoinableFactoryWrapper()
+    );
+
     return partialQuery.build(
-        JoinDataSource.create(
-            leftDataSource,
-            rightDataSource,
-            prefixSignaturePair.lhs,
-            condition.getExpression(),
-            toDruidJoinType(joinRel.getJoinType()),
-            getDimFilter(getPlannerContext(), leftSignature, leftFilter),
-            getPlannerContext().getExprMacroTable(),
-            getPlannerContext().getJoinableFactoryWrapper()
-        ),
+        joinDataSource,
         prefixSignaturePair.rhs,
         getPlannerContext(),
         getCluster().getRexBuilder(),
@@ -286,6 +289,12 @@ public class DruidJoinQueryRel extends DruidRel<DruidJoinQueryRel>
     retVal.addAll(((DruidRel<?>) left).getDataSourceNames());
     retVal.addAll(((DruidRel<?>) right).getDataSourceNames());
     return retVal;
+  }
+
+  @Override
+  public DataSource getDataSourceFromRel()
+  {
+    return joinDataSource;
   }
 
   @Override

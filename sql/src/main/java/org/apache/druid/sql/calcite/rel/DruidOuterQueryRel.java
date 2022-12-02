@@ -32,6 +32,7 @@ import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.druid.java.util.common.StringUtils;
+import org.apache.druid.query.DataSource;
 import org.apache.druid.query.Druids;
 import org.apache.druid.query.QueryDataSource;
 import org.apache.druid.segment.column.RowSignature;
@@ -205,5 +206,12 @@ public class DruidOuterQueryRel extends DruidRel<DruidOuterQueryRel>
                   .makeCost(partialQuery.estimateCost(), 0, 0)
                   .multiplyBy(CostEstimates.MULTIPLIER_OUTER_QUERY)
                   .plus(planner.getCostFactory().makeCost(CostEstimates.COST_SUBQUERY, 0, 0));
+  }
+
+  @Override
+  public DataSource getDataSourceFromRel()
+  {
+    final DruidQuery subQuery = ((DruidRel) sourceRel).toDruidQuery(true);
+    return new QueryDataSource(subQuery.getQuery());
   }
 }

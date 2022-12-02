@@ -19,13 +19,12 @@
 
 package org.apache.druid.sql.calcite.rel;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalCorrelate;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.druid.query.DataSource;
 import org.apache.druid.query.JoinDataSource;
 import org.apache.druid.query.TableDataSource;
 import org.apache.druid.query.UnnestDataSource;
@@ -35,7 +34,6 @@ import org.apache.druid.sql.calcite.table.DruidTable;
 import org.apache.druid.sql.calcite.table.RowSignatures;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,15 +46,16 @@ public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
   private final PartialDruidQuery partialQuery;
   private final PlannerConfig plannerConfig;
   private final LogicalCorrelate logicalCorrelate;
-  private final DruidTable druidTable;
+  private final DataSource baseDataSource;
   private final String dimensionToUnnest;
+  private UnnestDataSource unnestDataSource;
 
   public DruidUnnestRel(
       RelOptCluster cluster,
       RelTraitSet traitSet,
       LogicalCorrelate logicalCorrelateRel,
       PartialDruidQuery partialQuery,
-      DruidTable druidTable,
+      DataSource dataSource,
       String dimensionToUnnest,
       PlannerContext plannerContext
   )
@@ -65,7 +64,7 @@ public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
     this.logicalCorrelate = logicalCorrelateRel;
     this.partialQuery = partialQuery;
     this.plannerConfig = plannerContext.getPlannerConfig();
-    this.druidTable = druidTable;
+    this.baseDataSource = dataSource;
     this.dimensionToUnnest = dimensionToUnnest;
   }
 
@@ -84,7 +83,7 @@ public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
         getTraitSet().plusAll(newQueryBuilder.getRelTraits()),
         logicalCorrelate,
         newQueryBuilder,
-        druidTable,
+        baseDataSource,
         dimensionToUnnest,
         getPlannerContext()
     );
@@ -93,9 +92,9 @@ public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
   @Override
   public DruidQuery toDruidQuery(boolean finalizeAggregations)
   {
-    final UnnestDataSource unnestDataSource =
+    this.unnestDataSource =
         UnnestDataSource.create(
-            druidTable.getDataSource(),
+            baseDataSource,
             dimensionToUnnest,
             //this would come from the as alias
             dimensionToUnnest,
@@ -150,7 +149,7 @@ public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
                    .collect(Collectors.toList())
         ),
         partialQuery,
-        druidTable,
+        baseDataSource,
         dimensionToUnnest,
         getPlannerContext()
     );
@@ -160,6 +159,18 @@ public class DruidUnnestRel extends DruidRel<DruidUnnestRel>
   @Override
   public Set<String> getDataSourceNames()
   {
-    return druidTable.getDataSource().getTableNames();
+    return baseDataSource.getTableNames();
+  }
+
+  @Override
+  public DataSource getDataSourceFromRel()
+  {
+    return UnnestDataSource.create(
+        baseDataSource,
+        dimensionToUnnest,
+        //this would come from the as alias
+        dimensionToUnnest,
+        null
+    );
   }
 }
