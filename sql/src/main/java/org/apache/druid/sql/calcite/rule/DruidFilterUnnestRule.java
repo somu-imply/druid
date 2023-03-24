@@ -93,10 +93,11 @@ public class DruidFilterUnnestRule extends RelOptRule
     @Override
     public boolean matches(RelOptRuleCall call)
     {
-      final Project rightP = call.rel(0);
-      final SqlKind rightProjectKind = rightP.getChildExps().get(0).getKind();
+      final Project rightProject = call.rel(0);
+      final SqlKind rightProjectKind = rightProject.getProjects().get(0).getKind();
       // allow rule to trigger only if there's a string CAST or numeric literal cast
-      return rightP.getProjects().size() == 1 && (rightProjectKind == SqlKind.CAST || rightProjectKind == SqlKind.LITERAL);
+      return rightProject.getProjects().size() == 1 &&
+             (rightProjectKind == SqlKind.CAST || rightProjectKind == SqlKind.LITERAL);
     }
 
     @Override

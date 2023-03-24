@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 
@@ -427,7 +428,13 @@ public class CalciteReplaceDmlTest extends CalciteIngestionDmlTest
   {
     testIngestionQuery()
         .sql("REPLACE INTO dst OVERWRITE SELECT * FROM foo PARTITIONED BY ALL TIME")
-        .expectValidationError(SqlPlanningException.class, "Missing time chunk information in OVERWRITE clause for REPLACE. Use OVERWRITE WHERE <__time based condition> or OVERWRITE ALL to overwrite the entire table.")
+        .expectValidationError(
+            SqlPlanningException.class,
+            Pattern.compile(
+                "Incorrect syntax near the keyword 'OVERWRITE' at line 1, column 18.\\nWas expecting one of:.*",
+                Pattern.DOTALL
+            )
+        )
         .verify();
   }
 

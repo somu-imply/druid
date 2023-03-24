@@ -37,7 +37,6 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.druid.java.util.common.StringUtils;
-import org.apache.druid.sql.calcite.expression.OperatorConversions.DefaultOperandTypeChecker;
 import org.apache.druid.sql.calcite.planner.DruidTypeSystem;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -50,13 +49,12 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @RunWith(Enclosed.class)
 public class OperatorConversionsTest
 {
-  public static class DefaultOperandTypeCheckerTest
+  public static class BasicOperandTypeCheckerTest
   {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -64,7 +62,7 @@ public class OperatorConversionsTest
     @Test
     public void testGetOperandCountRange()
     {
-      SqlOperandTypeChecker typeChecker = new DefaultOperandTypeChecker(
+      SqlOperandTypeChecker typeChecker = new BasicOperandTypeChecker(
           ImmutableList.of(SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER),
           2,
           IntSets.EMPTY_SET,
@@ -78,7 +76,7 @@ public class OperatorConversionsTest
     @Test
     public void testIsOptional()
     {
-      SqlOperandTypeChecker typeChecker = new DefaultOperandTypeChecker(
+      SqlOperandTypeChecker typeChecker = new BasicOperandTypeChecker(
           ImmutableList.of(SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER),
           2,
           IntSets.EMPTY_SET,
@@ -434,24 +432,17 @@ public class OperatorConversionsTest
           node = Mockito.mock(SqlNode.class);
         }
         RelDataType relDataType = Mockito.mock(RelDataType.class);
-
-        if (operand.isNullable) {
-          Mockito.when(relDataType.isNullable()).thenReturn(true);
-        } else {
-          Mockito.when(relDataType.isNullable()).thenReturn(false);
-        }
+        Mockito.when(node.getParserPosition()).thenReturn(SqlParserPos.ZERO);
+        Mockito.when(relDataType.isNullable()).thenReturn(operand.isNullable);
         Mockito.when(validator.deriveType(ArgumentMatchers.any(), ArgumentMatchers.eq(node)))
                .thenReturn(relDataType);
         Mockito.when(relDataType.getSqlTypeName()).thenReturn(operand.type);
         operands.add(node);
       }
-      SqlParserPos pos = Mockito.mock(SqlParserPos.class);
-      Mockito.when(pos.plusAll(ArgumentMatchers.any(Collection.class)))
-             .thenReturn(pos);
       SqlCallBinding callBinding = new SqlCallBinding(
           validator,
           Mockito.mock(SqlValidatorScope.class),
-          function.createCall(pos, operands)
+          function.createCall(SqlParserPos.ZERO, operands)
       );
 
       Mockito.when(validator.newValidationError(ArgumentMatchers.any(), ArgumentMatchers.any()))

@@ -63,7 +63,7 @@ public class ExternalTableMacro implements TableMacro
   }
 
   @Override
-  public TranslatableTable apply(final List<Object> arguments)
+  public TranslatableTable apply(final List<?> arguments)
   {
     try {
       ExternalTableSpec spec = new ExternalTableSpec(

@@ -136,9 +136,13 @@ public abstract class AbstractStatement implements Closeable
     // We can't collapse catch clauses since SqlPlanningException has
     // type-sensitive constructors.
     catch (SqlParseException e) {
+      // TODO(gianm): this is here b/c otherwise SqlPlanningException removes the original stack trace
+      log.warn(e, "Parse exception");
       throw new SqlPlanningException(e);
     }
     catch (ValidationException e) {
+      // TODO(gianm): this is here b/c otherwise SqlPlanningException removes the original stack trace
+      log.warn(e, "Validation exception");
       throw new SqlPlanningException(e);
     }
   }

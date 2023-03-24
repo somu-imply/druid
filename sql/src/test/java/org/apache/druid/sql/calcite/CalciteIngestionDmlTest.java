@@ -57,6 +57,7 @@ import org.apache.druid.sql.http.SqlParameter;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.text.MatchesPattern;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.internal.matchers.ThrowableMessageMatcher;
@@ -65,6 +66,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class CalciteIngestionDmlTest extends BaseCalciteQueryTest
 {
@@ -291,10 +293,15 @@ public class CalciteIngestionDmlTest extends BaseCalciteQueryTest
 
     public IngestionDmlTester expectValidationError(Class<? extends Throwable> clazz, String message)
     {
+      return expectValidationError(clazz, Pattern.compile(Pattern.quote(message)));
+    }
+
+    public IngestionDmlTester expectValidationError(Class<? extends Throwable> clazz, Pattern pattern)
+    {
       return expectValidationError(
           CoreMatchers.allOf(
               CoreMatchers.instanceOf(clazz),
-              ThrowableMessageMatcher.hasMessage(CoreMatchers.equalTo(message))
+              ThrowableMessageMatcher.hasMessage(MatchesPattern.matchesPattern(pattern))
           )
       );
     }

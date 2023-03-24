@@ -19,27 +19,51 @@
 
 package org.apache.druid.sql.calcite.expression.builtin;
 
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.druid.java.util.common.StringUtils;
-import org.apache.druid.query.extraction.SubstringDimExtractionFn;
+import org.apache.druid.query.filter.DimFilter;
 import org.apache.druid.segment.column.RowSignature;
 import org.apache.druid.sql.calcite.expression.DruidExpression;
 import org.apache.druid.sql.calcite.expression.Expressions;
 import org.apache.druid.sql.calcite.expression.SqlOperatorConversion;
+import org.apache.druid.sql.calcite.planner.DruidTypeSystem;
 import org.apache.druid.sql.calcite.planner.PlannerContext;
+import org.apache.druid.sql.calcite.rel.VirtualColumnRegistry;
 
-public class SubstringOperatorConversion implements SqlOperatorConversion
+import javax.annotation.Nullable;
+
+public class SearchOperatorConversion implements SqlOperatorConversion
 {
+  private static final RexBuilder REX_BUILDER = new RexBuilder(new JavaTypeFactoryImpl(DruidTypeSystem.INSTANCE));
+
   @Override
   public SqlOperator calciteOperator()
   {
-    return SqlStdOperatorTable.SUBSTRING;
+    return SqlStdOperatorTable.SEARCH;
   }
 
+  @Nullable
+  @Override
+  public DimFilter toDruidFilter(
+      final PlannerContext plannerContext,
+      final RowSignature rowSignature,
+      @Nullable final VirtualColumnRegistry virtualColumnRegistry,
+      final RexNode rexNode
+  )
+  {
+    return Expressions.toFilter(
+        plannerContext,
+        rowSignature,
+        virtualColumnRegistry,
+        RexUtil.expandSearch(REX_BUILDER, null, rexNode)
+    );
+  }
+
+  @Nullable
   @Override
   public DruidExpression toDruidExpression(
       final PlannerContext plannerContext,
@@ -47,34 +71,10 @@ public class SubstringOperatorConversion implements SqlOperatorConversion
       final RexNode rexNode
   )
   {
-    // Can't simply pass-through operands, since SQL standard args don't match what Druid's expression language wants.
-    // SQL is 1-indexed, Druid is 0-indexed.
-
-    final RexCall call = (RexCall) rexNode;
-    final DruidExpression input = Expressions.toDruidExpression(
+    return Expressions.toDruidExpression(
         plannerContext,
         rowSignature,
-        call.getOperands().get(0)
-    );
-    if (input == null) {
-      return null;
-    }
-    final int index = RexLiteral.intValue(call.getOperands().get(1)) - 1;
-    final int length;
-    if (call.getOperands().size() > 2) {
-      length = RexLiteral.intValue(call.getOperands().get(2));
-    } else {
-      length = -1;
-    }
-
-    return input.map(
-        simpleExtraction -> simpleExtraction.cascade(new SubstringDimExtractionFn(index, length < 0 ? null : length)),
-        expression -> StringUtils.format(
-            "substring(%s, %s, %s)",
-            expression,
-            DruidExpression.longLiteral(index),
-            DruidExpression.longLiteral(length)
-        )
+        RexUtil.expandSearch(REX_BUILDER, null, rexNode)
     );
   }
 }
