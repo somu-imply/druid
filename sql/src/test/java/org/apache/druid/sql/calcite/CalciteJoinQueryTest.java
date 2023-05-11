@@ -5137,7 +5137,7 @@ public class CalciteJoinQueryTest extends BaseCalciteQueryTest
                                         .setDataSource(CalciteTests.DATASOURCE1)
                                         .setInterval(querySegmentSpec(Filtration.eternity()))
                                         .setVirtualColumns(expressionVirtualColumn("v0", "1", ColumnType.LONG))
-                                        .setDimFilter(selector("m2", "A", null))
+                                        .setDimFilter(selector("m2", "0.0", null))
                                         .setDimensions(
                                             new DefaultDimensionSpec("v0", "d0", ColumnType.LONG)
                                         )
