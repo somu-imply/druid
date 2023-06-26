@@ -62,7 +62,7 @@ public class DruidUserDefinedTableMacro extends SchemaAwareUserDefinedTableMacro
   }
 
   @Override
-  public Set<ResourceAction> computeResources(final SqlCall call)
+  public Set<ResourceAction> computeResources(final SqlCall call, final boolean inputSourceTypeSecurityEnabled)
   {
     return Collections.singleton(Externals.EXTERNAL_RESOURCE_ACTION);
   }

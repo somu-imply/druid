@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.apache.druid</groupId>
     <artifactId>druid</artifactId>
-    <version>26.0.0-SNAPSHOT</version>
+    <version>27.0.0-SNAPSHOT</version>
   </parent>
 
   <dependencies>
@@ -408,7 +408,7 @@
         </configuration>
       </plugin>
 
-      <!-- Adds the path of the generated parser to the classpath -->
+      <!-- Adds the path of the generated parser to the build path -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>

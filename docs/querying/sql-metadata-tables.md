@@ -105,6 +105,26 @@ SELECT "ORDINAL_POSITION", "COLUMN_NAME", "IS_NULLABLE", "DATA_TYPE", "JDBC_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE "TABLE_NAME" = 'foo'
 ```
+### ROUTINES table
+`INFORMATION_SCHEMA.ROUTINES` provides a list of all known functions.
+
+|Column|Type| Notes|
+|------|----|------|
+|ROUTINE_CATALOG|VARCHAR| The catalog that contains the routine. Always set as `druid`|
+|ROUTINE_SCHEMA|VARCHAR| The schema that contains the routine. Always set as `INFORMATION_SCHEMA`|
+|ROUTINE_NAME|VARCHAR| THe routine name|
+|ROUTINE_TYPE|VARCHAR| The routine type. Always set as `FUNCTION`|
+|IS_AGGREGATOR|VARCHAR| If a routine is an aggregator function, then the value will be set to `YES`, else `NO`|
+|SIGNATURES|VARCHAR| One or more routine signatures|
+
+For example, this query returns information about all the aggregator functions:
+
+```sql
+SELECT "ROUTINE_CATALOG", "ROUTINE_SCHEMA", "ROUTINE_NAME", "ROUTINE_TYPE", "IS_AGGREGATOR", "SIGNATURES"
+FROM "INFORMATION_SCHEMA"."ROUTINES"
+WHERE "IS_AGGREGATOR" = 'YES'
+```
+
 
 ## SYSTEM SCHEMA
 
@@ -208,7 +228,7 @@ Servers table lists all discovered servers in the cluster.
 |current_size|BIGINT|Current size of segments in bytes on this server. Only valid for HISTORICAL type, for other types it's 0|
 |max_size|BIGINT|Max size in bytes this server recommends to assign to segments see [druid.server.maxSize](../configuration/index.md#historical-general-configuration). Only valid for HISTORICAL type, for other types it's 0|
 |is_leader|BIGINT|1 if the server is currently the 'leader' (for services which have the concept of leadership), otherwise 0 if the server is not the leader, or the default long value (0 or null depending on `druid.generic.useDefaultValueForNull`) if the server type does not have the concept of leadership|
-
+|start_time|STRING|Timestamp in ISO8601 format when the server was announced in the cluster|
 To retrieve information about all servers, use the query:
 
 ```sql

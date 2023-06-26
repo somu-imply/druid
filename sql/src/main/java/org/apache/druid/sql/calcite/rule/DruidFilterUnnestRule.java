@@ -24,6 +24,7 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.druid.sql.calcite.rel.DruidUnnestRel;
 
 public class DruidFilterUnnestRule extends RelOptRule
@@ -93,11 +94,16 @@ public class DruidFilterUnnestRule extends RelOptRule
     @Override
     public boolean matches(RelOptRuleCall call)
     {
-      final Project rightProject = call.rel(0);
-      final SqlKind rightProjectKind = rightProject.getProjects().get(0).getKind();
-      // allow rule to trigger only if there's a string CAST or numeric literal cast
-      return rightProject.getProjects().size() == 1 &&
-             (rightProjectKind == SqlKind.CAST || rightProjectKind == SqlKind.LITERAL);
+      final Project rightP = call.rel(0);
+      if (rightP.getProjects().size() > 0) {
+        final SqlKind rightProjectKind = rightP.getProjects().get(0).getKind();
+        final SqlTypeName projectType = rightP.getProjects().get(0).getType().getSqlTypeName();
+        final SqlTypeName unnestDataType = call.rel(1).getRowType().getFieldList().get(0).getType().getSqlTypeName();
+        // allow rule to trigger only if project involves a cast on the same row type
+        return rightP.getProjects().size() == 1 && ((rightProjectKind == SqlKind.CAST || rightProjectKind == SqlKind.LITERAL)
+                                                     && projectType == unnestDataType);
+      }
+      return false;
     }
 
     @Override

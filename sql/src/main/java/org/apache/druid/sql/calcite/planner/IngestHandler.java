@@ -273,6 +273,18 @@ public abstract class IngestHandler extends QueryHandler
       }
       super.validate();
     }
+
+    @Override
+    public ExplainAttributes explainAttributes()
+    {
+      return new ExplainAttributes(
+          DruidSqlInsert.OPERATOR.getName(),
+          sqlNode.getTargetTable(),
+          sqlNode.getPartitionedBy(),
+          sqlNode.getClusteredBy(),
+          null
+      );
+    }
   }
 
   /**
@@ -330,6 +342,18 @@ public abstract class IngestHandler extends QueryHandler
             String.join(",", replaceIntervals)
         );
       }
+    }
+
+    @Override
+    public ExplainAttributes explainAttributes()
+    {
+      return new ExplainAttributes(
+          DruidSqlReplace.OPERATOR.getName(),
+          sqlNode.getTargetTable(),
+          sqlNode.getPartitionedBy(),
+          sqlNode.getClusteredBy(),
+          sqlNode.getReplaceTimeQuery()
+      );
     }
   }
 }

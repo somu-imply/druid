@@ -122,7 +122,6 @@ public class QueryFrameworkUtils
         new ServiceEmitter("dummy", "dummy", new NoopEmitter()),
         new NoopRequestLogger(),
         QueryStackTests.DEFAULT_NOOP_SCHEDULER,
-        authConfig,
         new DefaultQueryConfig(ImmutableMap.of()),
         new SqlLifecycleManager()
     );
@@ -169,7 +168,8 @@ public class QueryFrameworkUtils
     InformationSchema informationSchema =
         new InformationSchema(
             catalog,
-            authorizerMapper
+            authorizerMapper,
+            createOperatorTable(injector)
         );
     rootSchema.add(CalciteTests.DRUID_SCHEMA_NAME, druidSchema);
     rootSchema.add(INFORMATION_SCHEMA_NAME, informationSchema);
