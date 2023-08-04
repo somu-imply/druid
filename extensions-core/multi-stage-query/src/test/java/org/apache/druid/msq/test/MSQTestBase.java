@@ -154,6 +154,7 @@ import org.apache.druid.sql.calcite.external.ExternalOperatorConversion;
 import org.apache.druid.sql.calcite.planner.CalciteRulesManager;
 import org.apache.druid.sql.calcite.planner.CatalogResolver;
 import org.apache.druid.sql.calcite.planner.PlannerConfig;
+import org.apache.druid.sql.calcite.planner.PlannerContext;
 import org.apache.druid.sql.calcite.planner.PlannerFactory;
 import org.apache.druid.sql.calcite.rel.DruidQuery;
 import org.apache.druid.sql.calcite.run.SqlEngine;
@@ -260,6 +261,12 @@ public class MSQTestBase extends BaseCalciteQueryTest
                       MultiStageQueryContext.CTX_CLUSTER_STATISTICS_MERGE_MODE,
                       ClusterStatisticsMergeMode.PARALLEL.toString()
                   )
+                  .build();
+
+  public static final Map<String, Object> UNNEST_CONTEXT =
+      ImmutableMap.<String, Object>builder()
+                  .putAll(DEFAULT_MSQ_CONTEXT)
+                  .put(PlannerContext.CTX_ENABLE_UNNEST, true)
                   .build();
 
   public static final Map<String, Object>

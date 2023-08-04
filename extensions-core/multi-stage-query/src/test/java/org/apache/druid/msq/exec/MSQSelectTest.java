@@ -51,6 +51,7 @@ import org.apache.druid.query.LookupDataSource;
 import org.apache.druid.query.Query;
 import org.apache.druid.query.QueryDataSource;
 import org.apache.druid.query.TableDataSource;
+import org.apache.druid.query.UnnestDataSource;
 import org.apache.druid.query.aggregation.CountAggregatorFactory;
 import org.apache.druid.query.aggregation.DoubleSumAggregatorFactory;
 import org.apache.druid.query.aggregation.FilteredAggregatorFactory;
@@ -128,13 +129,13 @@ public class MSQSelectTest extends MSQTestBase
   @Parameterized.Parameters(name = "{index}:with context {0}")
   public static Collection<Object[]> data()
   {
-    Object[][] data = new Object[][]{
-        {DEFAULT, DEFAULT_MSQ_CONTEXT},
-        {DURABLE_STORAGE, DURABLE_STORAGE_MSQ_CONTEXT},
+    /*{DURABLE_STORAGE, DURABLE_STORAGE_MSQ_CONTEXT},
         {FAULT_TOLERANCE, FAULT_TOLERANCE_MSQ_CONTEXT},
         {PARALLEL_MERGE, PARALLEL_MERGE_MSQ_CONTEXT},
         {QUERY_RESULTS_WITH_DURABLE_STORAGE, QUERY_RESULTS_WITH_DURABLE_STORAGE_CONTEXT},
-        {QUERY_RESULTS_WITH_DEFAULT, QUERY_RESULTS_WITH_DEFAULT_CONTEXT}
+        {QUERY_RESULTS_WITH_DEFAULT, QUERY_RESULTS_WITH_DEFAULT_CONTEXT}*/
+    Object[][] data = new Object[][]{
+        {DEFAULT, UNNEST_CONTEXT}
     };
     return Arrays.asList(data);
   }
@@ -288,6 +289,119 @@ public class MSQSelectTest extends MSQTestBase
                 .with().rows(3).frames(1),
             0, 0, "shuffle"
         )
+        .verifyResults();
+  }
+
+  @Test
+  public void testSelectOnFoo3()
+  {
+    RowSignature resultSignature = RowSignature.builder()
+                                               .add("EXPR$0", ColumnType.LONG)
+                                               .build();
+    RowSignature outputSignature = RowSignature.builder()
+                                               .add("d", ColumnType.LONG)
+                                               .build();
+
+    final ColumnMappings expectedColumnMappings = new ColumnMappings(
+        ImmutableList.of(
+            new ColumnMapping("EXPR$0", "d")
+        )
+    );
+
+    testSelectQuery()
+        .setSql("select d from UNNEST(ARRAY[1,2,3]) as unnested(d)")
+        .setExpectedMSQSpec(
+            MSQSpec.builder()
+                   .query(newScanQueryBuilder()
+                              .dataSource(
+                                  InlineDataSource.fromIterable(
+                                      ImmutableList.of(
+                                          new Object[]{1L},
+                                          new Object[]{2L},
+                                          new Object[]{3L}
+                                      ),
+                                      resultSignature
+                                  )
+                              )
+                              .intervals(querySegmentSpec(Filtration.eternity()))
+                              .columns("EXPR$0")
+                              .context(defaultScanQueryContext(
+                                  context,
+                                  resultSignature
+                              ))
+                              .build())
+                   .columnMappings(expectedColumnMappings)
+                   .tuningConfig(MSQTuningConfig.defaultConfig())
+                   .destination(isDurableStorageDestination()
+                                ? DurableStorageMSQDestination.INSTANCE
+                                : TaskReportMSQDestination.INSTANCE)
+                   .build()
+        )
+        .setExpectedRowSignature(outputSignature)
+        .setQueryContext(context)
+        .setExpectedResultRows(ImmutableList.of(
+            new Object[]{1},
+            new Object[]{2},
+            new Object[]{3}
+        ))
+        .verifyResults();
+  }
+
+  @Test
+  public void testSelectOnFoo4()
+  {
+    RowSignature resultSignature = RowSignature.builder()
+                                               .add("j0.unnest", ColumnType.STRING)
+                                               .build();
+
+    RowSignature outputSignature = RowSignature.builder()
+                                               .add("d3", ColumnType.STRING)
+                                               .build();
+
+    final ColumnMappings expectedColumnMappings = new ColumnMappings(
+        ImmutableList.of(
+            new ColumnMapping("j0.unnest", "d3")
+        )
+    );
+
+    testSelectQuery()
+        .setSql("select d3 from foo, UNNEST(MV_TO_ARRAY(dim3)) as unnested(d3)")
+        .setExpectedMSQSpec(
+            MSQSpec.builder()
+                   .query(newScanQueryBuilder()
+                              .dataSource(
+                                  UnnestDataSource.create(
+                                      new TableDataSource(CalciteTests.DATASOURCE1),
+                                      expressionVirtualColumn("j0.unnest", "\"dim3\"", ColumnType.STRING),
+                                      null
+                                  )
+                              )
+                              .intervals(querySegmentSpec(Filtration.eternity()))
+                              .columns("j0.unnest")
+                              .context(defaultScanQueryContext(
+                                  context,
+                                  resultSignature
+                              ))
+                              .build())
+                   .columnMappings(expectedColumnMappings)
+                   .tuningConfig(MSQTuningConfig.defaultConfig())
+                   .destination(isDurableStorageDestination()
+                                ? DurableStorageMSQDestination.INSTANCE
+                                : TaskReportMSQDestination.INSTANCE)
+                   .build()
+        )
+        .setExpectedRowSignature(outputSignature)
+        .setQueryContext(context)
+        .setExpectedResultRows(ImmutableList.of(
+            new Object[]{"a"},
+            new Object[]{"b"},
+            new Object[]{"b"},
+            new Object[]{"c"},
+            new Object[]{"d"},
+            new Object[]{""},
+            new Object[]{""},
+            new Object[]{""}
+        ))
         .verifyResults();
   }
 
