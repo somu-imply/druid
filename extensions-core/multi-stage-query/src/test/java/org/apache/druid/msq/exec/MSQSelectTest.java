@@ -347,8 +347,9 @@ public class MSQSelectTest extends MSQTestBase
         .verifyResults();
   }
 
+
   @Test
-  public void testSelectOnFoo4()
+  public void testSelectOnFoo5()
   {
     RowSignature resultSignature = RowSignature.builder()
                                                .add("j0.unnest", ColumnType.STRING)
@@ -365,23 +366,38 @@ public class MSQSelectTest extends MSQTestBase
     );
 
     testSelectQuery()
-        .setSql("select d3 from foo, UNNEST(MV_TO_ARRAY(dim3)) as unnested(d3)")
+        .setSql("SELECT d3 FROM (select * from druid.numfoo where dim2='a'), UNNEST(MV_TO_ARRAY(dim3)) as unnested (d3)")
         .setExpectedMSQSpec(
             MSQSpec.builder()
                    .query(newScanQueryBuilder()
-                              .dataSource(
-                                  UnnestDataSource.create(
-                                      new TableDataSource(CalciteTests.DATASOURCE1),
-                                      expressionVirtualColumn("j0.unnest", "\"dim3\"", ColumnType.STRING),
-                                      null
-                                  )
-                              )
+                              .dataSource(UnnestDataSource.create(
+                                  new QueryDataSource(
+                                      newScanQueryBuilder()
+                                          .dataSource(
+                                              new TableDataSource(CalciteTests.DATASOURCE3)
+                                          )
+                                          .intervals(querySegmentSpec(Filtration.eternity()))
+                                          .resultFormat(ScanQuery.ResultFormat.RESULT_FORMAT_COMPACTED_LIST)
+                                          .legacy(false)
+                                          .filters(equality("dim2", "a", ColumnType.STRING))
+                                          .columns("dim3")
+                                          .context(defaultScanQueryContext(
+                                              context,
+                                              resultSignature
+                                          ))
+                                          .build()
+                                  ),
+                                  expressionVirtualColumn("j0.unnest", "\"dim3\"", ColumnType.STRING),
+                                  null
+                              ))
                               .intervals(querySegmentSpec(Filtration.eternity()))
-                              .columns("j0.unnest")
+                              .resultFormat(ScanQuery.ResultFormat.RESULT_FORMAT_COMPACTED_LIST)
+                              .legacy(false)
                               .context(defaultScanQueryContext(
                                   context,
                                   resultSignature
                               ))
+                              .columns(ImmutableList.of("j0.unnest"))
                               .build())
                    .columnMappings(expectedColumnMappings)
                    .tuningConfig(MSQTuningConfig.defaultConfig())
@@ -395,11 +411,6 @@ public class MSQSelectTest extends MSQTestBase
         .setExpectedResultRows(ImmutableList.of(
             new Object[]{"a"},
             new Object[]{"b"},
-            new Object[]{"b"},
-            new Object[]{"c"},
-            new Object[]{"d"},
-            new Object[]{""},
-            new Object[]{""},
             new Object[]{""}
         ))
         .verifyResults();

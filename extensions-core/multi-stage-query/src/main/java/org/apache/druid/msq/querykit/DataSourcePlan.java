@@ -384,9 +384,9 @@ public class DataSourcePlan
 
     final List<InputSpec> inputSpecs = new ArrayList<>(basePlan.getInputSpecs());
     basePlan.getSubQueryDefBuilder().ifPresent(subQueryDefBuilder::addAll);
-    inputSpecs.addAll(basePlan.getInputSpecs());
 
-    newDataSource = UnnestDataSource.create(newDataSource, dataSource.getVirtualColumn(), dataSource.getUnnestFilter());
+    int shift = basePlan.getInputSpecs().size();
+    newDataSource = UnnestDataSource.create(shiftInputNumbers(newDataSource, shift ), dataSource.getVirtualColumn(), dataSource.getUnnestFilter());
     return new DataSourcePlan(newDataSource,
                               inputSpecs,
                               broadcast ? IntOpenHashSet.of(0) : IntSets.emptySet(),
