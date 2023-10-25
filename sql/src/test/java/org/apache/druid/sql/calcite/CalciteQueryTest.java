@@ -14315,7 +14315,7 @@ public class CalciteQueryTest extends BaseCalciteQueryTest
         + "GROUP BY 1 \n"
         + "LIMIT 10\n"
         + ")\n"
-        + "select m2, (AVG(trend_score)) from t\n"
+        + "select m2, (MAX(trend_score)) from t\n"
         + "where m2 > 2\n"
         + "GROUP BY 1 \n"
         + "ORDER BY 2 DESC",
