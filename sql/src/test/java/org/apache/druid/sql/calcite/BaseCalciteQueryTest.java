@@ -207,6 +207,14 @@ public class BaseCalciteQueryTest extends CalciteTestBase
                   .put(QueryContexts.MAX_SCATTER_GATHER_BYTES_KEY, Long.MAX_VALUE)
                   .build();
 
+  public static final Map<String, Object> QUERY_CONTEXT_DEBUG =
+      ImmutableMap.<String, Object>builder()
+                  .put(QueryContexts.CTX_SQL_QUERY_ID, DUMMY_SQL_ID)
+                  .put(PlannerContext.CTX_SQL_CURRENT_TIMESTAMP, "2000-01-01T00:00:00Z")
+                  .put(QueryContexts.DEFAULT_TIMEOUT_KEY, QueryContexts.DEFAULT_TIMEOUT_MILLIS)
+                  .put(QueryContexts.MAX_SCATTER_GATHER_BYTES_KEY, Long.MAX_VALUE)
+                  .put(QueryContexts.ENABLE_DEBUG, "true")
+                  .build();
   public static final Map<String, Object> QUERY_CONTEXT_NO_STRINGIFY_ARRAY =
       ImmutableMap.<String, Object>builder()
                   .putAll(QUERY_CONTEXT_DEFAULT)

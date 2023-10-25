@@ -48,6 +48,7 @@ import org.apache.calcite.tools.Programs;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.sql.calcite.external.ExternalTableScanRule;
+import org.apache.druid.sql.calcite.rule.DruidAggregateRemoveRule;
 import org.apache.druid.sql.calcite.rule.DruidLogicalValuesRule;
 import org.apache.druid.sql.calcite.rule.DruidRelToDruidRule;
 import org.apache.druid.sql.calcite.rule.DruidRules;
@@ -97,6 +98,7 @@ public class CalciteRulesManager
           CoreRules.AGGREGATE_EXPAND_WITHIN_DISTINCT,
           CoreRules.AGGREGATE_CASE_TO_FILTER,
           CoreRules.FILTER_AGGREGATE_TRANSPOSE,
+          CoreRules.AGGREGATE_FILTER_TRANSPOSE,
           CoreRules.PROJECT_WINDOW_TRANSPOSE,
           CoreRules.MATCH,
           CoreRules.SORT_PROJECT_TRANSPOSE,
@@ -182,6 +184,8 @@ public class CalciteRulesManager
           // with ordering on a non-time column
           // which is not allowed in Druid. We should add that rule back
           // once Druid starts to support non-time ordering over scan queries
+          DruidAggregateRemoveRule.INSTANCE,
+          //CoreRules.AGGREGATE_REMOVE,
           CoreRules.UNION_TO_DISTINCT,
           CoreRules.PROJECT_REMOVE,
           CoreRules.AGGREGATE_JOIN_TRANSPOSE,
@@ -237,7 +241,13 @@ public class CalciteRulesManager
 
     boolean isDebug = plannerContext.queryContext().isDebug();
     return ImmutableList.of(
-        Programs.sequence(preProgram, Programs.ofRules(druidConventionRuleSet(plannerContext))),
+        Programs.sequence(
+            new LoggingProgram("Start", isDebug),
+            preProgram,
+            new LoggingProgram("After PreProgram", isDebug),
+            Programs.ofRules(druidConventionRuleSet(plannerContext)),
+            new LoggingProgram("After volcano planner program", isDebug)),
+        //Programs.sequence(preProgram, Programs.ofRules(druidConventionRuleSet(plannerContext))),
         Programs.sequence(preProgram, Programs.ofRules(bindableConventionRuleSet(plannerContext))),
         Programs.sequence(
             // currently, adding logging program after every stage for easier debugging
