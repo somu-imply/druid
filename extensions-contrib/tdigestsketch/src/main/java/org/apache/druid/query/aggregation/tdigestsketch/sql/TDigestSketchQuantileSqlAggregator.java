@@ -40,6 +40,7 @@ import org.apache.druid.segment.column.ColumnType;
 import org.apache.druid.sql.calcite.aggregation.Aggregation;
 import org.apache.druid.sql.calcite.aggregation.Aggregations;
 import org.apache.druid.sql.calcite.aggregation.SqlAggregator;
+import org.apache.druid.sql.calcite.expression.BasicOperandTypeChecker;
 import org.apache.druid.sql.calcite.expression.DruidExpression;
 import org.apache.druid.sql.calcite.planner.PlannerContext;
 import org.apache.druid.sql.calcite.rel.InputAccessor;
@@ -171,11 +172,17 @@ public class TDigestSketchQuantileSqlAggregator implements SqlAggregator
           null,
           OperandTypes.or(
               OperandTypes.and(
-                  OperandTypes.sequence(SIGNATURE1, OperandTypes.ANY, OperandTypes.LITERAL),
+                  BasicOperandTypeChecker.builder()
+                                         .operandTypes(SqlTypeFamily.ANY, SqlTypeFamily.NUMERIC)
+                                         .literalOperands(1)
+                                         .build(),
                   OperandTypes.family(SqlTypeFamily.ANY, SqlTypeFamily.NUMERIC)
               ),
               OperandTypes.and(
-                  OperandTypes.sequence(SIGNATURE2, OperandTypes.ANY, OperandTypes.LITERAL, OperandTypes.LITERAL),
+                  BasicOperandTypeChecker.builder()
+                                         .operandTypes(SqlTypeFamily.ANY, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC)
+                                         .literalOperands(1, 2)
+                                         .build(),
                   OperandTypes.family(SqlTypeFamily.ANY, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC)
               )
           ),

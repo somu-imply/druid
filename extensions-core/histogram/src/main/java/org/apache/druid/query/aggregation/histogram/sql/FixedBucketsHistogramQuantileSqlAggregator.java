@@ -26,7 +26,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -39,6 +38,7 @@ import org.apache.druid.segment.column.ColumnType;
 import org.apache.druid.sql.calcite.aggregation.Aggregation;
 import org.apache.druid.sql.calcite.aggregation.Aggregations;
 import org.apache.druid.sql.calcite.aggregation.SqlAggregator;
+import org.apache.druid.sql.calcite.expression.BasicOperandTypeChecker;
 import org.apache.druid.sql.calcite.expression.DruidExpression;
 import org.apache.druid.sql.calcite.planner.PlannerContext;
 import org.apache.druid.sql.calcite.rel.InputAccessor;
@@ -238,44 +238,18 @@ public class FixedBucketsHistogramQuantileSqlAggregator implements SqlAggregator
           SqlKind.OTHER_FUNCTION,
           ReturnTypes.explicit(SqlTypeName.DOUBLE),
           null,
-          OperandTypes.or(
-              OperandTypes.and(
-                  OperandTypes.sequence(
-                      SIGNATURE1,
-                      OperandTypes.ANY,
-                      OperandTypes.LITERAL,
-                      OperandTypes.LITERAL,
-                      OperandTypes.LITERAL,
-                      OperandTypes.LITERAL
-                  ),
-                  OperandTypes.family(
-                      SqlTypeFamily.ANY,
-                      SqlTypeFamily.NUMERIC,
-                      SqlTypeFamily.NUMERIC,
-                      SqlTypeFamily.NUMERIC,
-                      SqlTypeFamily.NUMERIC
-                  )
-              ),
-              OperandTypes.and(
-                  OperandTypes.sequence(
-                      SIGNATURE2,
-                      OperandTypes.ANY,
-                      OperandTypes.LITERAL,
-                      OperandTypes.LITERAL,
-                      OperandTypes.LITERAL,
-                      OperandTypes.LITERAL,
-                      OperandTypes.LITERAL
-                  ),
-                  OperandTypes.family(
-                      SqlTypeFamily.ANY,
-                      SqlTypeFamily.NUMERIC,
-                      SqlTypeFamily.NUMERIC,
-                      SqlTypeFamily.NUMERIC,
-                      SqlTypeFamily.NUMERIC,
-                      SqlTypeFamily.STRING
-                  )
-              )
-          ),
+          BasicOperandTypeChecker.builder()
+                                 .operandTypes(
+                                     SqlTypeFamily.ANY,
+                                     SqlTypeFamily.NUMERIC,
+                                     SqlTypeFamily.NUMERIC,
+                                     SqlTypeFamily.NUMERIC,
+                                     SqlTypeFamily.NUMERIC,
+                                     SqlTypeFamily.STRING
+                                 )
+                                 .requiredOperandCount(5)
+                                 .literalOperands(1, 2, 3, 4)
+                                 .build(),
           SqlFunctionCategory.NUMERIC,
           false,
           false

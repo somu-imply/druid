@@ -35,6 +35,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.InferTypes;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.sql.util.SqlVisitor;
@@ -61,6 +62,7 @@ import org.apache.druid.segment.column.ColumnHolder;
 import org.apache.druid.segment.column.ColumnType;
 import org.apache.druid.sql.calcite.aggregation.Aggregation;
 import org.apache.druid.sql.calcite.aggregation.SqlAggregator;
+import org.apache.druid.sql.calcite.expression.BasicOperandTypeChecker;
 import org.apache.druid.sql.calcite.expression.DruidExpression;
 import org.apache.druid.sql.calcite.expression.Expressions;
 import org.apache.druid.sql.calcite.planner.Calcites;
@@ -371,11 +373,10 @@ public class EarliestLatestAnySqlAggregator implements SqlAggregator
           InferTypes.RETURN_TYPE,
           OperandTypes.or(
               OperandTypes.ANY,
-              OperandTypes.sequence(
-                  "'" + aggregatorType.name() + "(expr, maxBytesPerString)'",
-                  OperandTypes.ANY,
-                  OperandTypes.and(OperandTypes.NUMERIC, OperandTypes.LITERAL)
-              )
+              BasicOperandTypeChecker.builder()
+                                     .operandTypes(SqlTypeFamily.ANY, SqlTypeFamily.NUMERIC)
+                                     .literalOperands(1)
+                                     .build()
           ),
           SqlFunctionCategory.USER_DEFINED_FUNCTION,
           false,

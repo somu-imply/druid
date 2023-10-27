@@ -38,6 +38,7 @@ import org.apache.druid.query.aggregation.post.FinalizingFieldAccessPostAggregat
 import org.apache.druid.segment.column.ColumnType;
 import org.apache.druid.sql.calcite.aggregation.Aggregation;
 import org.apache.druid.sql.calcite.aggregation.SqlAggregator;
+import org.apache.druid.sql.calcite.expression.BasicOperandTypeChecker;
 import org.apache.druid.sql.calcite.expression.DruidExpression;
 import org.apache.druid.sql.calcite.expression.Expressions;
 import org.apache.druid.sql.calcite.planner.Calcites;
@@ -176,19 +177,11 @@ public class EarliestLatestBySqlAggregator implements SqlAggregator
           SqlKind.OTHER_FUNCTION,
           EARLIEST_LATEST_ARG0_RETURN_TYPE_INFERENCE,
           InferTypes.RETURN_TYPE,
-          OperandTypes.or(
-              OperandTypes.sequence(
-                  "'" + StringUtils.format("%s_BY", aggregatorType.name()) + "(expr, timeColumn)'",
-                  OperandTypes.ANY,
-                  OperandTypes.family(SqlTypeFamily.TIMESTAMP)
-              ),
-              OperandTypes.sequence(
-                  "'" + StringUtils.format("%s_BY", aggregatorType.name()) + "(expr, timeColumn, maxBytesPerString)'",
-                  OperandTypes.ANY,
-                  OperandTypes.family(SqlTypeFamily.TIMESTAMP),
-                  OperandTypes.and(OperandTypes.NUMERIC, OperandTypes.LITERAL)
-              )
-          ),
+          BasicOperandTypeChecker.builder()
+                                 .operandTypes(SqlTypeFamily.ANY, SqlTypeFamily.TIMESTAMP, SqlTypeFamily.NUMERIC)
+                                 .requiredOperandCount(2)
+                                 .literalOperands(2)
+                                 .build(),
           SqlFunctionCategory.USER_DEFINED_FUNCTION,
           false,
           false,

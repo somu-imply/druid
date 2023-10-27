@@ -5658,7 +5658,7 @@ public class CalciteQueryTest extends BaseCalciteQueryTest
         expected -> {
           expected.expect(CoreMatchers.instanceOf(DruidException.class));
           expected.expect(ThrowableMessageMatcher.hasMessage(CoreMatchers.containsString(
-              "Argument to function 'TIME_IN_INTERVAL' must be a literal (line [1], column [38])")));
+              "Argument to function 'TIME_IN_INTERVAL' must be a literal (line [1], column [63])")));
         }
     );
   }

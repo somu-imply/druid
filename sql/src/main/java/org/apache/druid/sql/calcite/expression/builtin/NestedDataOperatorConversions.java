@@ -53,6 +53,7 @@ import org.apache.druid.segment.column.RowSignature;
 import org.apache.druid.segment.nested.NestedPathFinder;
 import org.apache.druid.segment.nested.NestedPathPart;
 import org.apache.druid.segment.virtual.NestedFieldVirtualColumn;
+import org.apache.druid.sql.calcite.expression.BasicOperandTypeChecker;
 import org.apache.druid.sql.calcite.expression.DruidExpression;
 import org.apache.druid.sql.calcite.expression.Expressions;
 import org.apache.druid.sql.calcite.expression.OperatorConversions;
@@ -119,11 +120,10 @@ public class NestedDataOperatorConversions
     private static final SqlFunction SQL_FUNCTION = OperatorConversions
         .operatorBuilder("JSON_KEYS")
         .operandTypeChecker(
-            OperandTypes.sequence(
-                "'JSON_KEYS(expr, path)'",
-                OperandTypes.ANY,
-                OperandTypes.and(OperandTypes.family(SqlTypeFamily.STRING), OperandTypes.LITERAL)
-            )
+            BasicOperandTypeChecker.builder()
+                                   .operandTypes(SqlTypeFamily.ANY, SqlTypeFamily.STRING)
+                                   .literalOperands(1)
+                                   .build()
         )
         .functionCategory(SqlFunctionCategory.USER_DEFINED_FUNCTION)
         .returnTypeNullableArrayWithNullableElements(SqlTypeName.VARCHAR)

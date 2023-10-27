@@ -34,6 +34,8 @@ import org.apache.calcite.sql2rel.SqlRexContext;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.util.Static;
 import org.apache.druid.java.util.common.IAE;
+import org.apache.druid.java.util.http.client.auth.BasicCredentials;
+import org.apache.druid.sql.calcite.expression.BasicOperandTypeChecker;
 import org.apache.druid.sql.calcite.expression.OperatorConversions;
 import org.apache.druid.sql.calcite.planner.Calcites;
 import org.apache.druid.sql.calcite.planner.DruidTypeSystem;
@@ -54,11 +56,10 @@ public class TimeInIntervalConvertletFactory implements DruidConvertletFactory
   private static final SqlOperator OPERATOR = OperatorConversions
       .operatorBuilder(NAME)
       .operandTypeChecker(
-          OperandTypes.sequence(
-              "'" + NAME + "(<TIMESTAMP>, <LITERAL ISO8601 INTERVAL>)'",
-              OperandTypes.family(SqlTypeFamily.TIMESTAMP),
-              OperandTypes.and(OperandTypes.family(SqlTypeFamily.CHARACTER), OperandTypes.LITERAL)
-          )
+          BasicOperandTypeChecker.builder()
+                                 .operandTypes(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.CHARACTER)
+                                 .literalOperands(1)
+                                 .build()
       )
       .returnTypeNonNull(SqlTypeName.BOOLEAN)
       .functionCategory(SqlFunctionCategory.TIMEDATE)
