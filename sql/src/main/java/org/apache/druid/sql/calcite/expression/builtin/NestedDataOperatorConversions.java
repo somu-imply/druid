@@ -125,6 +125,7 @@ public class NestedDataOperatorConversions
                                    .literalOperands(1)
                                    .build()
         )
+        .literalOperands(1)
         .functionCategory(SqlFunctionCategory.USER_DEFINED_FUNCTION)
         .returnTypeNullableArrayWithNullableElements(SqlTypeName.VARCHAR)
         .build();

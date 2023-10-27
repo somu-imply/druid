@@ -27,14 +27,12 @@ import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql2rel.SqlRexContext;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.util.Static;
 import org.apache.druid.java.util.common.IAE;
-import org.apache.druid.java.util.http.client.auth.BasicCredentials;
 import org.apache.druid.sql.calcite.expression.BasicOperandTypeChecker;
 import org.apache.druid.sql.calcite.expression.OperatorConversions;
 import org.apache.druid.sql.calcite.planner.Calcites;
@@ -61,6 +59,7 @@ public class TimeInIntervalConvertletFactory implements DruidConvertletFactory
                                  .literalOperands(1)
                                  .build()
       )
+      .literalOperands(1)
       .returnTypeNonNull(SqlTypeName.BOOLEAN)
       .functionCategory(SqlFunctionCategory.TIMEDATE)
       .build();
